@@ -1,0 +1,155 @@
+# src/train_all.py 용 통합 config
+#
+#   common:  모든 모델이 공유하는 기본값
+#   models:  모델별 오버레이 (common 위에 깊은 병합)
+#
+# 오버레이 값은 각 모델 폴더의 configs/*.yaml 에 있던 원저자 설정을 옮겨온 것입니다.
+# 공정 비교를 하려면 epoch 수를 맞추세요: python src/train_all.py --epochs 100
+
+common:
+  data:
+    dataset_name: "ogbg-ppa"
+    dir: "dataset"              # ogb 기본 root. 레포 루트에서 실행하는 것을 전제로 함
+
+  model:
+    num_layers: 4
+    num_sublayers: 1
+    post_mp_layers: 1           # 풀링 후 MLP 헤드 층 수 (1 = 선형 헤드)
+    edge_attr: true             # 엣지 특징(7-dim)을 메시지에 사용
+    norm: batch                 # batch | layer | none
+    ffn: false
+    ffn_ratio: 2
+    backbone_residual: true
+    vn_residual: true
+    vn_residual_alpha: 1.0
+    pos_encoding:
+      enabled: false
+      dim: 16
+    model_name: 'best_model.pt'
+
+  train:
+    seed: 0                     # --seed 로 덮어쓸 수 있음
+    optimizer: adam             # adam | adamw
+    lr: 0.001
+    weight_decay: 0.00001
+    epochs: 50                  # --epochs 로 전체 통일 가능
+    warmup_epochs: 5            # 선형 warmup 후 cosine decay
+    grad_clip: 1.0              # null 이면 비활성
+    ema_decay: 0.999            # null 이면 EMA 자체를 건너뜀
+    amp: true                   # bf16 autocast (CPU 면 자동 무시)
+    batch_size: 32
+    num_workers: 4
+    emb_dim: 300
+    drop_ratio: 0.5
+    max_seq_len: 5              # code2 전용
+    num_vocab: 5000             # code2 전용
+    max_depth: 20               # code2 전용
+
+  cuda:
+    cuda_number: 0              # --cuda 로 덮어쓸 수 있음
+
+models:
+  # ---------------- ogbg-ppa ----------------
+  TCD:                          # tree-centroid VN
+    model:
+      num_layers: 3
+      num_sublayers: 1
+      model_name: 'best_model_tcd.pt'
+    train:
+      drop_ratio: 0.35
+
+  GCN+CD:                       # GCN+ 백본 + centroid-tree VN
+    model:
+      num_layers: 4
+      num_sublayers: 1
+      post_mp_layers: 2
+      ffn: true
+      model_name: 'best_model_gcn+cd.pt'
+    train:
+      optimizer: adamw
+      lr: 0.0003
+      emb_dim: 512
+      drop_ratio: 0.2
+      epochs: 400
+      warmup_epochs: 10
+
+  SD:                           # separator-tree VN (패키지 형태)
+    model:
+      name: baseline            # SD.build_model 이 요구하는 키
+      num_layers: 4
+      num_sublayers: 2
+      vn_residual: true
+      vn_residual_alpha: 0.5
+      backbone_residual: true
+      model_name: 'best_model_sd.pt'
+    train:
+      emb_dim: 300
+      drop_ratio: 0.35
+      vn_leaf_size: 1
+      vn_separator: balanced_merged
+      vn_separator_merge_limit: 16
+      vn_separator_balance_ratio: 0.75
+
+  GCN+:                         # VN 없는 순수 GCN+ (Luo et al. ICML'25 Table 9)
+    model:
+      num_layers: 4
+      post_mp_layers: 2
+      ffn: true
+      model_name: 'best_model_gcn+.pt'
+    train:
+      optimizer: adamw
+      lr: 0.0003
+      emb_dim: 512
+      drop_ratio: 0.2
+      epochs: 400
+      warmup_epochs: 10
+
+  GCN_ppa:                      # OGB 공식 baseline
+    model:
+      num_layers: 5
+      gnn_type: gcn             # gcn | gin
+      virtual_node: false       # true 면 gcn-virtual
+      model_name: 'best_model_gcn_ppa.pt'
+    train:
+      optimizer: adam
+      lr: 0.001
+      emb_dim: 300
+      drop_ratio: 0.5
+      epochs: 100
+      warmup_epochs: 0          # 공식 구현은 스케줄러 없음
+      ema_decay: null
+
+  # ---------------- ogbg-code2 ----------------
+  CD:                           # centroid decomposition 에지 추가
+    data:
+      dataset_name: "ogbg-code2"
+    model:
+      num_layers: 3
+      model_name: 'best_model_cd.pt'
+    train:
+      emb_dim: 300
+      drop_ratio: 0.35
+      batch_size: 32
+      epochs: 25
+      warmup_epochs: 0
+      ema_decay: null
+      amp: false
+
+  GCN_code2:                    # OGB 공식 baseline
+    data:
+      dataset_name: "ogbg-code2"
+    model:
+      num_layers: 5
+      gnn_type: gcn
+      virtual_node: false
+      model_name: 'best_model_gcn_code2.pt'
+    train:
+      optimizer: adam
+      lr: 0.001
+      emb_dim: 300
+      drop_ratio: 0.0
+      batch_size: 128
+      epochs: 25
+      warmup_epochs: 0
+      ema_decay: null
+      amp: false
