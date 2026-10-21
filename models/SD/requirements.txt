@@ -1,0 +1,9 @@
+# Use an existing PyTorch environment, or install PyTorch for your CPU/CUDA first.
+# The PyTorch version matches the original project; +cu118 builds also satisfy it.
+torch==2.7.1
+torch_geometric
+networkx
+numpy
+scipy>=1.8
+# Only needed to load config.yaml (including the example).
+PyYAML
