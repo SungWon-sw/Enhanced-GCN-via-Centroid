@@ -1,0 +1,27 @@
+# 디렉토리 및 데이터 관련
+data:
+  dataset_name: "ogbg-code2"
+  dir: "./"
+
+# 모델 아키텍처 관련
+model:
+  hidden_dim: 64
+  num_layers: 3
+  dropout: 0.5 ######
+
+# 학습 관련
+train:
+  weight_decay: 0.00001
+  epochs: 50
+  batch_size: 32
+  max_seq_len : 5
+  batch_size: 32
+  lr: 0.001
+  num_workers: 4
+  num_vocab: 5000
+  emb_dim : 300
+  max_depth : 20
+  drop_ratio : 0.35
+  
+cuda:
+  cuda_number: 8

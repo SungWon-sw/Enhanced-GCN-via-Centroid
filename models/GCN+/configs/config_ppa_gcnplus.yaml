@@ -1,0 +1,36 @@
+# VN/centroid 없는 순수 GCN+ (ogbg-ppa). 실행: python src/train_ppa.py configs/config_ppa_gcnplus.yaml
+# 설정은 Luo et al. ICML'25 Table 9 (configs/gcn/ppa.yaml)를 따름 — main 브랜치 7359367 과 동일.
+data:
+  dataset_name: "ogbg-ppa"
+  dir: "./"
+
+model:
+  num_layers: 4
+  post_mp_layers: 2
+  edge_attr: true
+  norm: batch                # batch | layer | none
+  ffn: true
+  ffn_ratio: 2
+  pos_encoding:
+    enabled: false
+    dim: 16
+  backbone_residual: true
+  model_name: 'best_model_ppa_gcnplus.pt'
+
+train:
+  seed: 0
+  optimizer: adamw
+  weight_decay: 0.00001
+  epochs: 400
+  warmup_epochs: 10
+  grad_clip: 1.0
+  ema_decay: 0.999
+  amp: true
+  batch_size: 32
+  lr: 0.0003
+  num_workers: 4
+  emb_dim: 512
+  drop_ratio: 0.2
+
+cuda:
+  cuda_number: 0

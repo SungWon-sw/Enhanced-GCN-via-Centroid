@@ -1,0 +1,28 @@
+# VN/centroid 기작 없는 순수 GCN baseline (ogbg-ppa)
+# 하이퍼파라미터는 main 브랜치 stash(WIP on main: 8d35b75)의 PPA 튜닝값을 따르되,
+# vn_residual/vn_residual_alpha/num_sublayers는 VN 전용이라 제외.
+data:
+  dataset_name: "ogbg-ppa"
+  dir: "./"
+
+model:
+  num_layers: 5              # OGB ppa 기준 GCN 5-layer
+  backbone_residual: true    # 각 GCN 레이어 주변 skip connection (VN과 무관, false면 plain stack)
+  model_name: 'best_model_ppa.pt'
+
+train:
+  seed: 0                    # multi-seed는 이 값만 0,1,2,... 로 바꿔 재실행
+  weight_decay: 0.0001
+  epochs: 150
+  warmup_epochs: 8            # 선형 lr warmup 후 cosine decay
+  grad_clip: 1.0              # clip_grad_norm_ (null이면 비활성)
+  ema_decay: 0.999            # 가중치 EMA (null이면 EMA 자체를 건너뜀)
+  amp: true                   # bf16 autocast (CPU면 자동 무시)
+  batch_size: 32
+  lr: 0.001
+  num_workers: 4
+  emb_dim: 300
+  drop_ratio: 0.5
+
+cuda:
+  cuda_number: 0
