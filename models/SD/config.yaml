@@ -1,0 +1,16 @@
+# 현재 configs/config.yaml에서 모델과 VN 전처리에 필요한 설정만 추출.
+model:
+  name: baseline
+  num_layers: 4
+  num_sublayers: 2
+  vn_residual: true
+  vn_residual_alpha: 0.5
+  backbone_residual: true
+
+train:
+  emb_dim: 300
+  drop_ratio: 0.35
+  vn_leaf_size: 1
+  vn_separator: balanced_merged
+  vn_separator_merge_limit: 16
+  vn_separator_balance_ratio: 0.75
