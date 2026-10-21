@@ -1,0 +1,41 @@
+# 디렉토리 및 데이터 관련
+data:
+  dataset_name: "ogbg-ppa"
+  dir: "./"
+
+# 모델 아키텍처 관련
+model:
+  num_layers: 4            # GCN+ ppa: 4
+  num_sublayers: 1
+  post_mp_layers: 2        # 풀링 후 MLP 헤드 층 수 (GCN+ ppa: 2, 1 이면 기존 선형 헤드)
+  dropout: 0.5 ######
+  # --- GCN+ 옵션 (기본값 = 기존 동작과 동일) ---
+  edge_attr: true          # 엣지 특징(7-dim)을 메시지에 사용
+  norm: batch              # 백본 정규화: batch | layer | none
+  ffn: true                # 레이어마다 FFN(+정규화, 잔차) 추가
+  ffn_ratio: 2             # FFN 은닉 배수
+  pos_encoding:            # RWSE 위치 인코딩 (노드 임베딩에 더함)
+    enabled: false
+    dim: 16                # 랜덤워크 길이 1..dim
+  backbone_residual: true  # GCN 레이어마다 skip connection (기존 옵션)
+  vn_residual: true        # centroid-tree 블록 잔차 (기존 옵션)
+  # dropout 은 train.drop_ratio (0 이면 off)
+
+# 학습 관련
+train:
+  # --- GCN+ ogbg-ppa 설정 (Luo et al. ICML'25, Table 9 / configs/gcn/ppa.yaml) ---
+  optimizer: adamw         # adam | adamw
+  weight_decay: 0.00001
+  epochs: 400
+  warmup_epochs: 10
+  batch_size: 32
+  max_seq_len : 5
+  lr: 0.0003
+  num_workers: 4
+  num_vocab: 5000
+  emb_dim : 512
+  max_depth : 20
+  drop_ratio : 0.2
+  
+cuda:
+  cuda_number: 8
